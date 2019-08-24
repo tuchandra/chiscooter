@@ -62,4 +62,4 @@ def stream_and_write(name: str, url: str, cooldown: int):
 
 
 if __name__ == "__main__":
-    stream_and_write("lyft", "https://mds.bird.co/gbfs/chicago/free_bike_status.json", 14)
+    stream_and_write("bird", "https://mds.bird.co/gbfs/chicago/free_bike_status.json", 14)
