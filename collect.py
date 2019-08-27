@@ -5,61 +5,92 @@ Collection script for scooter data.
 
 """
 
+import asyncio
 import json
 import requests
-import time
 
 from loguru import logger
 from pathlib import Path
+from typing import Any, Callable, Dict, List, Tuple
 
 
-def stream_data(url: str, cooldown: int) -> None:
-    """Stream data from some endpoint at a regular interval
+def write_to_file(data: Dict[Any, Any], stream_name: str, last_updated: int) -> None:
+    """Write response data to an output file.
+
+    Parameters
+    --------
+    data: Dict[Any, Any]
+        Dictionary of response data. This will be written as to a JSON file without
+        concern for its contents.
+
+    stream_name: str
+        The name of the stream from which the data came
+
+    last_updated: int
+        The Unix time at which the data was generated. We say int, but this is really what
+        the filename will be; it could be anything.
+
+    """
+
+    outdir = Path(stream_name)
+    if not outdir.exists():
+        outdir.mkdir()
+
+    with open(outdir.joinpath(f"{last_updated}.json"), "w") as f:
+        json.dump(data, f, indent=4)
+        logger.info(f"Wrote data from {stream_name} at {last_updated} to file")
+
+
+async def stream_data(url: str, stream_name: str, cooldown: int) -> Any:
+    """Asyncrhonously data from some endpoint at a regular interval
 
     Hit the provided URL with a GET request at an interval specified by the cooldown. If
-    new data is available, yield it back to the caller.
+    new data is available, yield it back to the caller. In the meantime, sleep and cede
+    control back to the main event loop.
 
     Parameters
     --------
     url: str
-        URL to access data from; must be accessible via GET request.
+        URL to get data from; must be accessible via GET request.
+
+    stream_name: str
+        The (preferably short) name of the stream that we're getting data from
 
     cooldown: int
         The interval at which the data is refreshed.
-
     """
 
     last_updated = 0  # after request is made, will be unixtime
     while True:
-        resp = requests.get(url)
-        data = resp.json()
+        data = requests.get(url).json()
 
         if data["last_updated"] > last_updated:
             last_updated = data["last_updated"]
-            logger.debug(f"New data available: {last_updated}")
+            logger.debug(f"New data available for {stream_name}: {last_updated}")
 
-            yield data
-            time.sleep(cooldown)
+            write_to_file(data, stream_name, last_updated)
+            await asyncio.sleep(cooldown - 1)
 
         else:
-            logger.debug(f"No data available yet")
-            time.sleep(0.5)
+            logger.debug(f"No data available yet for {stream_name}")
+            await asyncio.sleep(0.5)
 
 
-def stream_and_write(name: str, url: str, cooldown: int):
-    """Write streamed data to a file as it becomes available."""
+async def all_streams():
+    stream_params: List[Tuple[str, str, int]] = [
+        ("https://mds.bird.co/gbfs/chicago/free_bike_status.json", "bird", 15),
+        (
+            "https://data.lime.bike/api/partners/v1/gbfs/chicago/free_bike_status",
+            "lime",
+            10,
+        ),
+    ]
 
-    outdir = Path(name)
-    if not outdir.exists():
-        outdir.mkdir()
-
-    stream = stream_data(url, cooldown)
-    for data in stream:
-        last_updated = data["last_updated"]
-        with open(outdir.joinpath(f"{last_updated}.json"), "w") as f:
-            json.dump(data, f, indent=4)
-            logger.info(f"Wrote data from {last_updated} to file")
+    await asyncio.gather(
+        stream_data(*stream_params[0]),
+        stream_data(*stream_params[1]),
+    )
 
 
 if __name__ == "__main__":
-    stream_and_write("bird", "https://mds.bird.co/gbfs/chicago/free_bike_status.json", 14)
+    asyncio.run(all_streams())
