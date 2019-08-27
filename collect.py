@@ -10,8 +10,15 @@ import json
 import requests
 
 from loguru import logger
+from typing import NamedTuple
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Tuple
+
+
+class StreamParams(NamedTuple):
+    name: str
+    url: str
+    cooldown: int
 
 
 def write_to_file(data: Dict[Any, Any], stream_name: str, last_updated: int) -> None:
@@ -41,7 +48,7 @@ def write_to_file(data: Dict[Any, Any], stream_name: str, last_updated: int) -> 
         logger.info(f"Wrote data from {stream_name} at {last_updated} to file")
 
 
-async def stream_data(url: str, stream_name: str, cooldown: int) -> Any:
+async def stream_data(name: str, url: str, cooldown: int) -> Any:
     """Asyncrhonously data from some endpoint at a regular interval
 
     Hit the provided URL with a GET request at an interval specified by the cooldown. If
@@ -50,11 +57,11 @@ async def stream_data(url: str, stream_name: str, cooldown: int) -> Any:
 
     Parameters
     --------
+    name: str
+        The (preferably short) name of the stream that we're getting data from
+
     url: str
         URL to get data from; must be accessible via GET request.
-
-    stream_name: str
-        The (preferably short) name of the stream that we're getting data from
 
     cooldown: int
         The interval at which the data is refreshed.
@@ -66,29 +73,24 @@ async def stream_data(url: str, stream_name: str, cooldown: int) -> Any:
 
         if data["last_updated"] > last_updated:
             last_updated = data["last_updated"]
-            logger.debug(f"New data available for {stream_name}: {last_updated}")
+            logger.debug(f"New data available for {name}: {last_updated}")
 
-            write_to_file(data, stream_name, last_updated)
+            write_to_file(data, name, last_updated)
             await asyncio.sleep(cooldown - 1)
 
         else:
-            logger.debug(f"No data available yet for {stream_name}")
+            logger.debug(f"No data available yet for {name}")
             await asyncio.sleep(0.5)
 
 
 async def all_streams():
-    stream_params: List[Tuple[str, str, int]] = [
-        ("https://mds.bird.co/gbfs/chicago/free_bike_status.json", "bird", 15),
-        (
-            "https://data.lime.bike/api/partners/v1/gbfs/chicago/free_bike_status",
-            "lime",
-            10,
-        ),
+    stream_params: List[StreamParams] = [
+        StreamParams(name="bird", url="https://mds.bird.co/gbfs/chicago/free_bike_status.json", cooldown=15),
+        StreamParams(name="lime", url="https://data.lime.bike/api/partners/v1/gbfs/chicago/free_bike_status", cooldown=10),
     ]
 
     await asyncio.gather(
-        stream_data(*stream_params[0]),
-        stream_data(*stream_params[1]),
+        *[stream_data(params.name, params.url, params.cooldown) for params in stream_params]
     )
 
 
