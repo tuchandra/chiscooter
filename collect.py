@@ -10,15 +10,22 @@ import json
 import requests
 
 from loguru import logger
-from typing import NamedTuple
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Tuple
 
 
-class StreamParams(NamedTuple):
+@dataclass
+class StreamParams:
     name: str
     url: str
     cooldown: int
+
+    def __post_init__(self):
+        """Replace cooldown of zero"""
+
+        if self.cooldown == 0:
+            self.cooldown = 15
 
 
 def write_to_file(data: Dict[Any, Any], stream_name: str, last_updated: int) -> None:
