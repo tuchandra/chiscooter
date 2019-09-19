@@ -159,4 +159,5 @@ async def all_streams():
 
 
 if __name__ == "__main__":
+    logger.add("file_{time}.log")
     asyncio.run(all_streams())
