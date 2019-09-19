@@ -85,12 +85,63 @@ async def stream_data(name: str, url: str, cooldown: int) -> Any:
 
 async def all_streams():
     stream_params: List[StreamParams] = [
-        StreamParams(name="bird", url="https://mds.bird.co/gbfs/chicago/free_bike_status.json", cooldown=15),
-        StreamParams(name="lime", url="https://data.lime.bike/api/partners/v1/gbfs/chicago/free_bike_status", cooldown=10),
+        StreamParams(
+            name="bird",
+            url="https://mds.bird.co/gbfs/chicago/free_bike_status.json",
+            cooldown=15,
+        ),
+        StreamParams(
+            name="bolt",
+            url="https://www.bolt.miami/bolt2/chi/gbfs/en/free_bike_status.json",
+            cooldown=15,
+        ),
+        StreamParams(
+            name="gruv",
+            url="https://portal.clevrmobility.com/api/gbfs/chicago/en/free_bike_status/?format=json",
+            cooldown=30,
+        ),
+        StreamParams(
+            name="jump",
+            url="https://gbfs.uber.com/v1/chicago/free_bike_status.json",
+            cooldown=15,
+        ),
+        StreamParams(
+            name="lime",
+            url="https://data.lime.bike/api/partners/v1/gbfs/chicago/free_bike_status",
+            cooldown=15,
+        ),
+        StreamParams(
+            name="lyft",
+            url="https://s3.amazonaws.com/lyft-lastmile-production-iad/lbs/chi/free_bike_status.json",
+            cooldown=30,
+        ),
+        StreamParams(
+            name="sherpa",
+            url="https://mds.bird.co/gbfs/platform-partner/sherpa/chicago/free_bike_status.json",
+            cooldown=30,
+        ),
+        StreamParams(
+            name="spin",
+            url="https://web.spin.pm/api/gbfs/v1/chicago/free_bike_status",
+            cooldown=15,
+        ),
+        StreamParams(
+            name="wheels",
+            url="https://chicago-gbfs.getwheelsapp.com/free_bike_status.json",
+            cooldown=15,
+        ),
+        StreamParams(
+            name="veoride",
+            url="https://share.veoride.com/api/share/gbfs/free_bike_status?area_name=Chicago",
+            cooldown=15,
+        ),
     ]
 
     await asyncio.gather(
-        *[stream_data(params.name, params.url, params.cooldown) for params in stream_params]
+        *[
+            stream_data(params.name, params.url, params.cooldown)
+            for params in stream_params
+        ]
     )
 
 
