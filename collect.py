@@ -76,7 +76,7 @@ async def stream_data(name: str, url: str, cooldown: int) -> Any:
     """
 
     last_updated = 0  # after request is made, will be unixtime
-    while datetime.now().hour < 22:  # scooters only available until 10 PM
+    while True:
         data = requests.get(url).json()
 
         if "lastUpdated" in data.keys():  # edge case for VeoRide not following the spec
@@ -159,12 +159,12 @@ async def all_streams():
 
 
 if __name__ == "__main__":
-    # Exception handling is overrated
-    while True:
+    # Exception handling is overrated, but the one thing we do need to check for is the
+    # time being before 10PM (when the scooter trial ends)
+    while datetime.now().hour < 22:
         logger.add("{time:YYYYMMDD_HHmmss}.log")
         try:
             asyncio.run(all_streams())
         except Exception as e:
             logger.error(f"{e}")
             logger.error(f"Restarting with a new log file ...")
-            ...
