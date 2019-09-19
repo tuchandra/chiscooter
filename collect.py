@@ -164,5 +164,7 @@ if __name__ == "__main__":
         logger.add("{time:YYYYMMDD_HHmmss}.log")
         try:
             asyncio.run(all_streams())
-        except:
+        except Exception as e:
+            logger.error(f"{e}")
+            logger.error(f"Restarting with a new log file ...")
             ...
