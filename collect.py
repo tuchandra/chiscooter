@@ -46,13 +46,13 @@ def write_to_file(data: Dict[Any, Any], stream_name: str, last_updated: int) -> 
 
     """
 
-    outdir = Path(stream_name)
+    outdir = Path("data") / stream_name
     if not outdir.exists():
-        outdir.mkdir()
+        outdir.mkdir(parents=True)
 
     with open(outdir.joinpath(f"{last_updated}.json"), "w") as f:
         json.dump(data, f, indent=4)
-        logger.info(f"Wrote data from {stream_name} at {last_updated} to file")
+        logger.debug(f"Wrote data from {stream_name} at {last_updated} to file")
 
 
 async def stream_data(name: str, url: str, cooldown: int) -> Any:
@@ -78,11 +78,16 @@ async def stream_data(name: str, url: str, cooldown: int) -> Any:
     while True:
         data = requests.get(url).json()
 
+        if "lastUpdated" in data.keys():  # edge case for VeoRide not following the spec
+            data["last_updated"] = data["lastUpdated"]
+
         if data["last_updated"] > last_updated:
             last_updated = data["last_updated"]
-            logger.debug(f"New data available for {name}: {last_updated}")
+            logger.info(f"New data available for {name}: {last_updated}")
 
             write_to_file(data, name, last_updated)
+
+            logger.debug(f"Sleeping {name} for {cooldown}")
             await asyncio.sleep(cooldown - 1)
 
         else:
@@ -95,52 +100,52 @@ async def all_streams():
         StreamParams(
             name="bird",
             url="https://mds.bird.co/gbfs/chicago/free_bike_status.json",
-            cooldown=15,
+            cooldown=60,
         ),
         StreamParams(
             name="bolt",
             url="https://www.bolt.miami/bolt2/chi/gbfs/en/free_bike_status.json",
-            cooldown=15,
+            cooldown=60,
         ),
         StreamParams(
             name="gruv",
             url="https://portal.clevrmobility.com/api/gbfs/chicago/en/free_bike_status/?format=json",
-            cooldown=30,
+            cooldown=60,
         ),
         StreamParams(
             name="jump",
             url="https://gbfs.uber.com/v1/chicago/free_bike_status.json",
-            cooldown=15,
+            cooldown=60,
         ),
         StreamParams(
             name="lime",
             url="https://data.lime.bike/api/partners/v1/gbfs/chicago/free_bike_status",
-            cooldown=15,
+            cooldown=0,
         ),
         StreamParams(
             name="lyft",
             url="https://s3.amazonaws.com/lyft-lastmile-production-iad/lbs/chi/free_bike_status.json",
-            cooldown=30,
+            cooldown=300,
         ),
         StreamParams(
             name="sherpa",
             url="https://mds.bird.co/gbfs/platform-partner/sherpa/chicago/free_bike_status.json",
-            cooldown=30,
+            cooldown=60,
         ),
         StreamParams(
             name="spin",
             url="https://web.spin.pm/api/gbfs/v1/chicago/free_bike_status",
-            cooldown=15,
+            cooldown=0,
         ),
         StreamParams(
             name="wheels",
             url="https://chicago-gbfs.getwheelsapp.com/free_bike_status.json",
-            cooldown=15,
+            cooldown=30,
         ),
         StreamParams(
             name="veoride",
             url="https://share.veoride.com/api/share/gbfs/free_bike_status?area_name=Chicago",
-            cooldown=15,
+            cooldown=0,
         ),
     ]
 
