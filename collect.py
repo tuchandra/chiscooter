@@ -11,6 +11,7 @@ import requests
 
 from loguru import logger
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Tuple
 
@@ -75,7 +76,7 @@ async def stream_data(name: str, url: str, cooldown: int) -> Any:
     """
 
     last_updated = 0  # after request is made, will be unixtime
-    while True:
+    while datetime.now().hour < 22:  # scooters only available until 10 PM
         data = requests.get(url).json()
 
         if "lastUpdated" in data.keys():  # edge case for VeoRide not following the spec
