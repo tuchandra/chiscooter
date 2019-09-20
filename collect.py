@@ -47,7 +47,7 @@ def write_to_file(data: Dict[Any, Any], stream_name: str, last_updated: int) -> 
 
     """
 
-    outdir = Path("data") / stream_name
+    outdir = Path("data") / datetime.now().strftime("%Y%m%d") / stream_name
     if not outdir.exists():
         outdir.mkdir(parents=True)
 
@@ -162,7 +162,7 @@ async def all_streams():
 if __name__ == "__main__":
     # Exception handling is overrated
     while True:
-        logger.add("{time:YYYYMMDD_HHmmss}.log")
+        logger.add("logs/{time:YYYYMMDD_HHmmss}.log")
         try:
             asyncio.run(all_streams())
         except Exception as e:
