@@ -161,8 +161,8 @@ async def all_streams():
 
 if __name__ == "__main__":
     # Exception handling is overrated
+    logger.add("logs/{time:YYYYMMDD}.log")
     while True:
-        logger.add("logs/{time:YYYYMMDD_HHmmss}.log")
         try:
             asyncio.run(all_streams())
         except Exception as e:
