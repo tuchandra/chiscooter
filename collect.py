@@ -95,6 +95,8 @@ async def stream_data(name: str, url: str, cooldown: int) -> Any:
             logger.debug(f"No data available yet for {name}")
             await asyncio.sleep(0.5)
 
+    return True  # when done
+
 
 @logger.catch
 async def all_streams():
@@ -164,7 +166,9 @@ if __name__ == "__main__":
     logger.add("logs/{time:YYYYMMDD}.log")
     while True:
         try:
-            asyncio.run(all_streams())
+            is_done = asyncio.run(all_streams())
+            if is_done:
+                break
         except Exception as e:
             logger.error(f"{e}")
             logger.error(f"Restarting with a new log file ...")
