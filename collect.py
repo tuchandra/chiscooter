@@ -153,12 +153,14 @@ async def all_streams():
         ),
     ]
 
-    await asyncio.gather(
+    results = await asyncio.gather(
         *[
             stream_data(params.name, params.url, params.cooldown)
             for params in stream_params
         ]
     )
+
+    return results
 
 
 if __name__ == "__main__":
@@ -167,7 +169,7 @@ if __name__ == "__main__":
     while True:
         try:
             is_done = asyncio.run(all_streams())
-            if is_done:
+            if all(is_done):
                 break
         except Exception as e:
             logger.error(f"{e}")
