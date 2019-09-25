@@ -153,14 +153,13 @@ async def all_streams():
         ),
     ]
 
-    results = await asyncio.gather(
+    # The individual coroutines will return when they are all done (i.e., at 10PM)
+    return await asyncio.gather(
         *[
             stream_data(params.name, params.url, params.cooldown)
             for params in stream_params
         ]
     )
-
-    return results
 
 
 if __name__ == "__main__":
@@ -170,6 +169,7 @@ if __name__ == "__main__":
         try:
             is_done = asyncio.run(all_streams())
             if all(is_done):
+                logger.info("All done for the day!")
                 break
         except Exception as e:
             logger.error(f"{e}")
