@@ -173,4 +173,4 @@ if __name__ == "__main__":
                 break
         except Exception as e:
             logger.error(f"{e}")
-            logger.error(f"Restarting with a new log file ...")
+            logger.error(f"Restarting ...")
